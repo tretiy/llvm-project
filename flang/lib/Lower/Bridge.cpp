@@ -54,6 +54,7 @@
 #include "flang/Semantics/symbol.h"
 #include "flang/Semantics/tools.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
+#include "mlir/Dialect/LLVMIR/LLVMAttrs.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Parser/Parser.h"
 #include "mlir/Transforms/RegionUtils.h"
@@ -4290,6 +4291,18 @@ private:
     assert(blockId == 0 && "invalid blockId");
     assert(activeConstructStack.empty() && "invalid construct stack state");
 
+    // Set target_cpu and target_features attributes to be passed through to the
+    // llvm.func operation during lowering.
+    const llvm::TargetMachine &targetMachine = bridge.getTargetMachine();
+    if (auto targetCPU = targetMachine.getTargetCPU(); !targetCPU.empty())
+      func->setAttr("target_cpu",
+                    mlir::StringAttr::get(func.getContext(), targetCPU));
+
+    if (auto targetFeatures = targetMachine.getTargetFeatureString();
+        !targetFeatures.empty())
+      func->setAttr("target_features", mlir::LLVM::TargetFeaturesAttr::get(
+                                           func.getContext(), targetFeatures));
+
     // Manage floating point exception, halting mode, and rounding mode
     // settings at function entry and exit.
     if (!funit.isMainProgram())
@@ -5062,12 +5075,12 @@ Fortran::lower::LoweringBridge::LoweringBridge(
     const Fortran::lower::LoweringOptions &loweringOptions,
     const std::vector<Fortran::lower::EnvironmentDefault> &envDefaults,
     const Fortran::common::LanguageFeatureControl &languageFeatures,
-    const llvm::DataLayout *dataLayout)
+    const llvm::TargetMachine &targetMachine)
     : semanticsContext{semanticsContext}, defaultKinds{defaultKinds},
       intrinsics{intrinsics}, targetCharacteristics{targetCharacteristics},
       cooked{&cooked}, context{context}, kindMap{kindMap},
       loweringOptions{loweringOptions}, envDefaults{envDefaults},
-      languageFeatures{languageFeatures} {
+      languageFeatures{languageFeatures}, targetMachine{targetMachine} {
   // Register the diagnostic handler.
   context.getDiagEngine().registerHandler([](mlir::Diagnostic &diag) {
     llvm::raw_ostream &os = llvm::errs();
@@ -5118,6 +5131,6 @@ Fortran::lower::LoweringBridge::LoweringBridge(
   assert(module.get() && "module was not created");
   fir::setTargetTriple(*module.get(), triple);
   fir::setKindMapping(*module.get(), kindMap);
-  if (dataLayout)
-    fir::support::setMLIRDataLayout(*module.get(), *dataLayout);
+  fir::support::setMLIRDataLayout(*module.get(),
+                                  targetMachine.createDataLayout());
 }

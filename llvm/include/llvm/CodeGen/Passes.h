@@ -196,6 +196,9 @@ namespace llvm {
   /// This pass reads flow sensitive profile.
   extern char &MIRProfileLoaderPassID;
 
+  // This pass gives undef values a Pseudo Instruction definition for Vector Instructions to ensure early-clobber is followed when using the greedy register allocator.
+  extern char &InitUndefID;
+
   /// FastRegisterAllocation Pass - This pass register allocates as fast as
   /// possible. It is best suited for debug code where live ranges are short.
   ///
@@ -600,6 +603,9 @@ namespace llvm {
 
   /// Lowers KCFI operand bundles for indirect calls.
   FunctionPass *createKCFIPass();
+
+  // Assigns a Pseudo Instruction to undef values in vector instructions to ensure that early-clobber is followed.
+  FunctionPass *createInitUndefPass();
 } // End llvm namespace
 
 #endif

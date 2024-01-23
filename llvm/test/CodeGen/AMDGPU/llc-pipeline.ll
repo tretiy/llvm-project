@@ -320,6 +320,7 @@
 ; GCN-O1-NEXT:        SI Shrink Instructions
 ; GCN-O1-NEXT:        Register Usage Information Propagation
 ; GCN-O1-NEXT:        Detect Dead Lanes
+; GCN-O1-NEXT:        Init Undef Pass
 ; GCN-O1-NEXT:        Remove dead machine instructions
 ; GCN-O1-NEXT:        Process Implicit Definitions
 ; GCN-O1-NEXT:        Remove unreachable machine basic blocks

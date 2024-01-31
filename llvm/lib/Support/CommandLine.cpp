@@ -1918,6 +1918,8 @@ size_t basic_parser_impl::getOptionWidth(const Option &O) const {
     size_t FormattingLen = 3;
     if (O.getMiscFlags() & PositionalEatsArgs)
       FormattingLen = 6;
+    else if (O.getValueExpectedFlag() & ValueOptional)
+      FormattingLen = 5;
     Len += getValueStr(O, ValName).size() + FormattingLen;
   }
 
